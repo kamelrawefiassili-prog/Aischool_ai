@@ -38,7 +38,7 @@ module.exports = async (req, res) => {
         const activeHumanCommands = bodyData?.active_commands || "لا توجد أوامر معلقة.";
 
         // 🌟 البيانات الجديدة والدقيقة التي زودتني بها
-        const hf_token = "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"; 
+        const hf_token = "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"; 
         const API_URL = "https://router.huggingface.co/v1/chat/completions";
 
         const systemPrompt = `أنت في محاكاة واقعية جداً بنسبة 100% لمعهد تعليمي ذكي ومتكامل.
