@@ -1,27 +1,25 @@
 /**
- * جسر المعهد التعليمي الذكي فائق الدقة - إصدار الاتصال المباشر الصافي
+ * جسر محاكاة المعهد التعليمي الذكي فائق الدقة - Vercel Serverless
  * المبرمج: كامل الروافي
- * التحديث: فتح بوابات CORS الكاملة لمحاكاة أسلوب بوت Golden Store TN
+ * التحديث: دمج الـ Hugging Face Router الجديد والتوكن الحديث المستقر
  */
 
 module.exports = async (req, res) => {
-    // 🌍 بروتوكول فتح الحماية الشامل (نفس أسلوب المتجر لمنع المقاطعة)
-    res.setHeader('Access-Control-Allow-Origin', '*'); 
+    // 🌍 بروتوكول فتح الحماية الشامل لضمان الاتصال المباشر من الهاتف
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Authorization');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-    // إذا كان المتصفح يرسل طلب فحص مسبق (Preflight OPTIONS)، نرد عليه بالقبول فوراً
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
 
     if (req.method === 'GET') {
-        return res.status(200).send("✅ جسر المعهد الذكي مستعد تماماً لاستقبال اتصالات الهاتف المباشرة!");
+        return res.status(200).send("✅ جسر المعهد الذكي مستعد ومحدث بنظام الـ Router الجديد!");
     }
 
     try {
-        // تأمين قراءة البيانات سواء جاءت كنص أو كـ JSON جاهز
         let bodyData = req.body;
         if (typeof bodyData === 'string') {
             try { 
@@ -31,7 +29,6 @@ module.exports = async (req, res) => {
             }
         }
 
-        // استخراج سياق المحاكاة الحالي
         const memberName = bodyData?.member_name || "عضو مجهول";
         const memberRole = bodyData?.member_role || "student"; 
         const specialty = bodyData?.specialty || "General";
@@ -40,11 +37,10 @@ module.exports = async (req, res) => {
         const fullChatHistory = bodyData?.chat_history || [];
         const activeHumanCommands = bodyData?.active_commands || "لا توجد أوامر معلقة.";
 
-        // توكن الاتصال والرابط الموحد المباشر لـ Hugging Face
-        const hf_token = "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"; 
-        const API_URL = "https://api-inference.huggingface.co/v1/chat/completions";
+        // 🌟 البيانات الجديدة والدقيقة التي زودتني بها
+        const hf_token = "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"; 
+        const API_URL = "https://router.huggingface.co/v1/chat/completions";
 
-        // 🧠 الـ System Prompt الأساسي للمحاكاة بنظام التثبت المنطقي الصارم
         const systemPrompt = `أنت في محاكاة واقعية جداً بنسبة 100% لمعهد تعليمي ذكي ومتكامل.
 تم تطويرك وبرمجتك بواسطة المبرمج المحترف (كامل الروافي).
 تؤدي الآن دور الشخصية التالية بناءً على البيانات الحية:
@@ -76,7 +72,7 @@ module.exports = async (req, res) => {
             });
         }
 
-        // إرسال الطلب المباشر للموديل
+        // 📡 إرسال الطلب المباشر للموديل عبر الـ Router والمزود المختار
         const response = await fetch(API_URL, {
             headers: { 
                 "Authorization": `Bearer ${hf_token}`,
@@ -84,33 +80,36 @@ module.exports = async (req, res) => {
             },
             method: "POST",
             body: JSON.stringify({
-                model: "meta-llama/Meta-Llama-3-8B-Instruct",
+                model: "meta-llama/Meta-Llama-3-8B-Instruct:novita", // السيرفر الموجه الجديد
                 messages: finalMessages, 
-                max_tokens: 250, 
-                temperature: 0.5, 
-                presence_penalty: 0.1,
-                frequency_penalty: 0.1
+                max_tokens: 350, 
+                temperature: 0.6,
+                stream: false
             }),
         });
 
         const rawResult = await response.text();
-        let data;
+        
+        if (!rawResult || rawResult.trim() === "") {
+            return res.status(200).json({ success: false, error: "الـ Router أرجع استجابة فارغة، تفقد رصيد الحساب." });
+        }
 
+        let data;
         try {
             data = JSON.parse(rawResult);
         } catch (jsonErr) {
-            return res.status(200).json({ success: false, error: "استجابة غير متوقعة من سيرفر المعالجة الخارجي" });
+            return res.status(200).json({ success: false, error: `فشل تحليل الرد الجديد. النص هو: ${rawResult.substring(0, 100)}` });
         }
 
         if (data.error) {
-            return res.status(200).json({ success: false, error: data.error.message || data.error });
+            return res.status(200).json({ success: false, error: data.error.message || JSON.stringify(data.error) });
         }
 
         if (data.choices && data.choices.length > 0) {
             const ai_reply = data.choices[0].message.content.trim();
             return res.status(200).json({ success: true, ai_reply: ai_reply });
         } else {
-            return res.status(200).json({ success: false, error: "لم يتم العثور على رد من الموديل الذكي" });
+            return res.status(200).json({ success: false, error: `بنية الاستجابة غريبة: ${rawResult.substring(0, 100)}` });
         }
 
     } catch (err) {
