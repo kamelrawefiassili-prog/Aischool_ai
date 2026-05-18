@@ -1,26 +1,27 @@
 /**
- * جسر محاكاة المعهد التعليمي الذكي فائق الدقة - Vercel Serverless
+ * جسر المعهد التعليمي الذكي فائق الدقة - إصدار الاتصال المباشر الصافي
  * المبرمج: كامل الروافي
- * التحديث: النسخة الحديدية الكاملة بصيغة CommonJS لمنع الخطأ 500 نهائياً
+ * التحديث: فتح بوابات CORS الكاملة لمحاكاة أسلوب بوت Golden Store TN
  */
 
 module.exports = async (req, res) => {
-    // 🌐 إعدادات الـ CORS الكاملة لتأمين الحركية ومنع الحظر
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    // 🌍 بروتوكول فتح الحماية الشامل (نفس أسلوب المتجر لمنع المقاطعة)
+    res.setHeader('Access-Control-Allow-Origin', '*'); 
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-    // التعامل مع طلبات التحقق المسبق للمتصفح
+    // إذا كان المتصفح يرسل طلب فحص مسبق (Preflight OPTIONS)، نرد عليه بالقبول فوراً
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
 
-    // رسالة الفحص عند زيارة الرابط مباشرة في المتصفح
     if (req.method === 'GET') {
-        return res.status(200).send("✅ جسر محاكاة المعهد يعمل بنظام التثبت المنطقي والمطابقة المزدوجة والمستقرة 100%!");
+        return res.status(200).send("✅ جسر المعهد الذكي مستعد تماماً لاستقبال اتصالات الهاتف المباشرة!");
     }
 
     try {
+        // تأمين قراءة البيانات سواء جاءت كنص أو كـ JSON جاهز
         let bodyData = req.body;
         if (typeof bodyData === 'string') {
             try { 
@@ -30,20 +31,20 @@ module.exports = async (req, res) => {
             }
         }
 
-        // 📊 استخراج بيانات أعضاء المعهد الممررة من السيرفر الوسيط
+        // استخراج سياق المحاكاة الحالي
         const memberName = bodyData?.member_name || "عضو مجهول";
         const memberRole = bodyData?.member_role || "student"; 
         const specialty = bodyData?.specialty || "General";
         const currentLevel = bodyData?.level || 1;
         const currentStatus = bodyData?.status || "Idle";
         const fullChatHistory = bodyData?.chat_history || [];
-        const activeHumanCommands = bodyData?.active_commands || "لا توجد أوامر علوية معلقة حالياً.";
+        const activeHumanCommands = bodyData?.active_commands || "لا توجد أوامر معلقة.";
 
-        // 🔑 مفاتيح الاتصال بسيرفر المعالجة الذكي
+        // توكن الاتصال والرابط الموحد المباشر لـ Hugging Face
         const hf_token = "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"; 
         const API_URL = "https://api-inference.huggingface.co/v1/chat/completions";
 
-        // 🧠 الـ System Prompt المطور للمعهد بنظام التحقق المزدوج الصارم
+        // 🧠 الـ System Prompt الأساسي للمحاكاة بنظام التثبت المنطقي الصارم
         const systemPrompt = `أنت في محاكاة واقعية جداً بنسبة 100% لمعهد تعليمي ذكي ومتكامل.
 تم تطويرك وبرمجتك بواسطة المبرمج المحترف (كامل الروافي).
 تؤدي الآن دور الشخصية التالية بناءً على البيانات الحية:
@@ -55,21 +56,15 @@ module.exports = async (req, res) => {
 
 🛑 بروتوكول التفكير والتحقق الصارم:
 الخطوة 1: اقرأ بتمعن وعمق الأوامر الصادرة من المستخدم الخارجي: (${activeHumanCommands}) ونفذها إن كانت موجهة لدورك.
-الخطوة 2: التزم بحدود شخصيتك الحالية تماماً ولا تخرج عنها وعامل البقية وفقاً لأدوارهم في السجل.
-الخطوة 3: تحدث بحرية تامة باللهجة أو اللغة المناسبة للسياق (تونسية، فصحى) بشكل طبيعي وواقعي جداً وتجنب الآلية.`;
+الخطوة 2: التزم بحدود شخصيتك الحالية تماماً وعامل البقية وفقاً لأدوارهم في السجل الممرر.
+الخطوة 3: تحدث بحرية تامة باللهجة أو اللغة المناسبة للسياق (تونسية، فصحى) بشكل طبيعي وواقعي مكملاً الموقف الأخير العالق.`;
 
-        // 🔄 إعداد مصفوفة الرسائل المتبادلة
         let finalMessages = [];
         finalMessages.push({ "role": "system", "content": systemPrompt });
 
         if (fullChatHistory.length > 0) {
             fullChatHistory.forEach(msg => {
-                let roleName = msg.role;
-                if (roleName === 'assistant' || roleName === 'model') {
-                    roleName = 'assistant';
-                } else {
-                    roleName = 'user';
-                }
+                let roleName = msg.role === 'assistant' || msg.role === 'model' ? 'assistant' : 'user';
                 finalMessages.push({ "role": roleName, "content": msg.content || "" });
             });
         }
@@ -81,7 +76,7 @@ module.exports = async (req, res) => {
             });
         }
 
-        // 📡 إرسال الطلب المباشر للموديل عبر fetch المدمج
+        // إرسال الطلب المباشر للموديل
         const response = await fetch(API_URL, {
             headers: { 
                 "Authorization": `Bearer ${hf_token}`,
@@ -91,10 +86,10 @@ module.exports = async (req, res) => {
             body: JSON.stringify({
                 model: "meta-llama/Meta-Llama-3-8B-Instruct",
                 messages: finalMessages, 
-                max_tokens: 350, 
-                temperature: 0.6, 
-                presence_penalty: 0.2,
-                frequency_penalty: 0.2
+                max_tokens: 250, 
+                temperature: 0.5, 
+                presence_penalty: 0.1,
+                frequency_penalty: 0.1
             }),
         });
 
